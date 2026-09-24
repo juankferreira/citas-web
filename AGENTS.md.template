@@ -1,0 +1,3 @@
+# AGENTS.md
+
+Este archivo debe generarse/depurarse con `../prompts/agents/PROMPT_AGENT_CITAS_WEB.md` **después** de importar el frontend real desde Google AI Studio, para que el agente detecte React/Angular y no invente un stack.
