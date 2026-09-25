@@ -92,21 +92,21 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               </h1>
 
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-light">
-                Crea tu expediente digital en segundos y accede a especialistas certificados, recordatorios y recetas en línea.
+                Regístrate, consulta profesionales disponibles y solicita tu cita desde un solo lugar.
               </p>
 
               <div className="pt-2 space-y-2.5 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">✓</div>
-                  <span>Agendamiento en 3 sencillos clics</span>
+                  <span>Agenda por sede, especialidad y horario</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">✓</div>
-                  <span>Recordatorios automáticos vía email y SMS</span>
+                  <span>Confirmación inmediata del estado de tu solicitud</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">✓</div>
-                  <span>Historial médico y recetas descargables</span>
+                  <span>Profesionales y horarios consultados en tiempo real</span>
                 </div>
               </div>
             </div>
