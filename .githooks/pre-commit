@@ -3,7 +3,7 @@ set -eu
 
 for file in $(git diff --cached --name-only --diff-filter=ACM); do
   [ "$file" = ".env.example" ] && continue
-  if git show ":$file" | grep -Eiq '(JWT_(ACCESS|REFRESH)_SECRET|DB_PASSWORD|MYSQL_ROOT_PASSWORD|OAUTH_CLIENT_SECRET)[[:space:]]*[:=][[:space:]]*["'"'][^$][^"'"']+'; then
+  if git show ":$file" | grep -Eiq '(JWT_(ACCESS|REFRESH)_SECRET|DB_PASSWORD|MYSQL_ROOT_PASSWORD|OAUTH_CLIENT_SECRET)[[:space:]]*[:=][[:space:]]*[^$[:space:]]+'; then
     printf '%s\n' "Se detectó un secreto potencial en $file. Retíralo antes de confirmar."
     exit 1
   fi
