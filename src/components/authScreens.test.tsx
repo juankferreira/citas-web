@@ -10,6 +10,11 @@ vi.mock('../auth/authApi', async (original) => {
   return { ...actual, login: vi.fn(), register: vi.fn() };
 });
 
+vi.mock('../api/schedulingApi', async (original) => {
+  const actual = await original<typeof import('../api/schedulingApi')>();
+  return { ...actual, catalogsApi: { ...actual.catalogsApi, insurancePlans: vi.fn().mockResolvedValue([]) } };
+});
+
 describe('pantallas de autenticación', () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -60,5 +65,26 @@ describe('pantallas de autenticación', () => {
       email: 'ana@example.com', phone: '3001234567', password: 'Password123*',
     }));
     expect(onSuccess).toHaveBeenCalledWith(account);
-  });
+  }, 15000);
+
+  it('carga los planes del API y envía el ID del plan elegido durante el registro', async () => {
+    const user = userEvent.setup();
+    const { catalogsApi } = await import('../api/schedulingApi');
+    vi.mocked(catalogsApi.insurancePlans).mockResolvedValue([{ id: '23', name: 'Plan Salud' }]);
+    vi.mocked(auth.register).mockResolvedValue({ id: '3', name: 'Ana Ruiz', email: 'ana@example.com', roles: ['USER'] });
+    render(<RegisterScreen onRegisterSuccess={vi.fn()} onNavigateLogin={vi.fn()} />);
+
+    await user.type(screen.getByLabelText(/nombres/i), 'Ana');
+    await user.type(screen.getByLabelText(/apellidos/i), 'Ruiz');
+    await user.type(screen.getByLabelText(/correo electrónico/i), 'ana@example.com');
+    await user.type(screen.getByLabelText(/teléfono móvil/i), '3001234567');
+    await user.type(screen.getByLabelText(/número de documento/i), '123457');
+    await user.type(screen.getByLabelText(/^contraseña/i), 'Password123*');
+    await screen.findByRole('option', { name: 'Plan Salud' });
+    await user.selectOptions(screen.getByLabelText(/plan de afiliación/i), '23');
+    await user.click(screen.getByRole('button', { name: /registrarme y acceder/i }));
+
+    expect(catalogsApi.insurancePlans).toHaveBeenCalledOnce();
+    expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({ insurancePlanId: '23' }));
+  }, 15000);
 });
