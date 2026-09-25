@@ -25,8 +25,19 @@ export const adminApi = {
   assignSpecialties: (id: string, specialtyIds: string[], primarySpecialtyId: string) => request<void>(`/admin/professionals/${id}/specialties`, { method: 'PUT', body: JSON.stringify({ specialtyIds, primarySpecialtyId }) }),
   assignLocations: (id: string, locationIds: string[]) => request<void>(`/admin/professionals/${id}/locations`, { method: 'PUT', body: JSON.stringify({ locationIds }) }), setActive: (id: string, active: boolean) => request<Professional>(`/admin/professionals/${id}/active`, { method: 'PATCH', body: JSON.stringify({ active }) }),
 };
+type AvailabilityBlockResponse = { id: string | number; locationId: string | number; date: string; start: string; end: string };
+function toAvailabilityBlock(block: AvailabilityBlockResponse): AvailabilityBlock {
+  return { id: String(block.id), locationId: String(block.locationId), startAt: `${block.date}T${block.start}`, endAt: `${block.date}T${block.end}` };
+}
+function toAvailabilityPayload(input: Omit<AvailabilityBlock, 'id' | 'locationName'>) {
+  const [date, startTime] = input.startAt.split('T');
+  const [endDate, endTime] = input.endAt.split('T');
+  if (!date || !startTime || !endDate || !endTime || date !== endDate) throw new SchedulingApiError(400, 'El bloque debe iniciar y terminar el mismo día.');
+  return { locationId: input.locationId, date, startTime, endTime };
+}
 export const availabilityApi = {
-  listMine: (date?: string, locationId?: string) => request<AvailabilityBlock[]>(`/professional/availability-blocks${query({ date, locationId })}`), create: (input: Omit<AvailabilityBlock, 'id' | 'locationName'>) => request<AvailabilityBlock>('/professional/availability-blocks', { method: 'POST', body: JSON.stringify(input) }),
-  update: (id: string, input: Partial<Omit<AvailabilityBlock, 'id' | 'locationName'>>) => request<AvailabilityBlock>(`/professional/availability-blocks/${id}`, { method: 'PATCH', body: JSON.stringify(input) }), remove: (id: string) => request<void>(`/professional/availability-blocks/${id}`, { method: 'DELETE' }),
+  listMine: (date?: string, locationId?: string) => request<AvailabilityBlockResponse[]>(`/professional/availability-blocks${query({ date, locationId })}`).then((blocks) => blocks.map(toAvailabilityBlock)),
+  create: (input: Omit<AvailabilityBlock, 'id' | 'locationName'>) => request<AvailabilityBlockResponse>('/professional/availability-blocks', { method: 'POST', body: JSON.stringify(toAvailabilityPayload(input)) }).then(toAvailabilityBlock),
+  update: (id: string, input: Partial<Omit<AvailabilityBlock, 'id' | 'locationName'>>) => request<AvailabilityBlockResponse>(`/professional/availability-blocks/${id}`, { method: 'PATCH', body: JSON.stringify(input) }).then(toAvailabilityBlock), remove: (id: string) => request<void>(`/professional/availability-blocks/${id}`, { method: 'DELETE' }),
 };
 export function schedulingErrorMessage(error: unknown): string { if (!(error instanceof SchedulingApiError)) return 'Ocurrió un error inesperado.'; if (error.status === 401) return 'Tu sesión venció. Inicia sesión nuevamente.'; if (error.status === 403) return 'No tienes permiso para realizar esta acción.'; if (error.status === 404) return 'El recurso solicitado no está disponible.'; if (error.status === 409) return 'El horario dejó de estar disponible. Selecciona otro horario.'; if (error.status === 400) return 'Revisa los datos ingresados.'; return error.message; }
