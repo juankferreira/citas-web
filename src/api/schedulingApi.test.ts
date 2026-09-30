@@ -47,4 +47,24 @@ describe('catálogo de planes para registro', () => {
       method: 'POST', body: JSON.stringify({ locationId: '1', date: '2026-10-01', startTime: '08:00', endTime: '09:00' }),
     }));
   });
+
+  it('solicita una reprogramación con fecha y hora separadas', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 8, status: 'PENDING' }), { status: 201, headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { appointmentsApi } = await import('./schedulingApi');
+
+    await appointmentsApi.reschedule('42', '2026-10-03', '10:30');
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/api/v1/appointments/42/reschedule', expect.objectContaining({ method: 'POST', body: JSON.stringify({ date: '2026-10-03', startTime: '10:30' }) }));
+  });
+
+  it('envía la decisión administrativa de una reprogramación', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 8, status: 'REJECTED' }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { appointmentsApi } = await import('./schedulingApi');
+
+    await appointmentsApi.decideReschedule('8', 'REJECT', 'Agenda no disponible');
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/api/v1/admin/reschedules/8/decision', expect.objectContaining({ method: 'POST', body: JSON.stringify({ decision: 'REJECT', reason: 'Agenda no disponible' }) }));
+  });
 });
