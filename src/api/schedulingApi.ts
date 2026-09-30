@@ -17,6 +17,14 @@ export const appointmentsApi = {
   create: (input: { professionalId: string; locationId: string; specialtyId: string; date: string; startTime: string; reason?: string }) => request<Appointment>('/appointments', { method: 'POST', body: JSON.stringify(input) }),
   pendingSpecialized: () => request<Appointment[]>('/admin/appointments/pending-specialized'),
   decide: (id: string, decision: 'APPROVE' | 'REJECT', reason?: string) => request<Appointment>(`/admin/appointments/${id}/decision`, { method: 'POST', body: JSON.stringify({ decision, reason }) }),
+  mine: (status?: string, date?: string) => request<Appointment[]>(`/appointments/mine${query({ status, date })}`),
+  cancel: (id: string) => request<Appointment>(`/appointments/${id}/cancel`, { method: 'POST' }),
+  reschedule: (id: string, date: string, startTime: string) => request<{ id: string; status: string; startAt: string; endAt: string }>(`/appointments/${id}/reschedule`, { method: 'POST', body: JSON.stringify({ date, startTime }) }),
+  history: (id: string) => request<Array<{ id: string; status: string; changedAt: string; source: string; reason?: string; actorName?: string }>>(`/appointments/${id}/history`),
+  professionalAgenda: (from?: string, to?: string, locationId?: string) => request<Appointment[]>(`/professional/appointments${query({ from, to, locationId })}`),
+  close: (id: string, decision: 'COMPLETED' | 'NO_SHOW') => request<Appointment>(`/professional/appointments/${id}/close`, { method: 'POST', body: JSON.stringify({ decision }) }),
+  pendingReschedules: () => request<Array<{ id: string; appointmentId: string; patientName: string; startAt: string; endAt: string }>>('/admin/reschedules/pending'),
+  decideReschedule: (id: string, decision: 'APPROVE' | 'REJECT', reason?: string) => request<{ id: string; status: string }>(`/admin/reschedules/${id}/decision`, { method: 'POST', body: JSON.stringify({ decision, reason }) }),
 };
 export const adminApi = {
   specialties: () => request<Specialty[]>('/admin/specialties'), createSpecialty: (input: { code: string; name: string; durationMinutes: 30 | 60; general: boolean }) => request<Specialty>('/admin/specialties', { method: 'POST', body: JSON.stringify(input) }),
